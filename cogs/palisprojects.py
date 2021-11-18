@@ -67,6 +67,7 @@ class Pali(commands.Cog):
     
     @commands.command(aliases=['coinflip','flip'])
     async def coin(self, ctx):
+        """Flips a coin, returning either Heads or Tails!"""
         if (random.randint(0,2) == 0):
             embed=discord.Embed(title="Heads!", color=0xff00ff)
             #embed.set_image(url="https://www.nicepng.com/png/full/395-3951330_thecoinspot-com-us-washington-head-quarter-dollar-coin.png")
@@ -81,6 +82,18 @@ class Pali(commands.Cog):
             embed.set_author(name="Coinflip")
             embed.set_footer(text="Coded by: Pali")
             await ctx.send(embed=embed)
+
+    @commands.command(aliases=['gmame'])
+    async def game(self, ctx):
+        i = 0
+        txt=["@","#","#","#","#","#","#","#","#","#"]
+        message = await ctx.send("".join(txt))
+        while(i<10):
+            i+=1
+            await message.edit(content="".join(txt))
+            txt.insert(0, txt.pop(-1))
+        await message.edit(content="##########")
+        print("done")
 
 #------------------------------------------------------
 #   Hello Pali this file is for you. you can put your 

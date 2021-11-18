@@ -3,7 +3,6 @@ import asyncio
 import discord
 import youtube_dl
 import discord.voice_client
-import ffmpeg
 from discord.ext import commands
 
 # Suppress noise about console usage from errors

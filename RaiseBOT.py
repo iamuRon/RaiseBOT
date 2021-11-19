@@ -140,7 +140,7 @@ Dont Touch Below This Comment as it is starting parameters
 
 client = MyClient()
 
-initial_extensions = ["cogs.commands", "cogs.palisprojects", "cogs.media"]
+initial_extensions = ["cogs.commands", "cogs.palisprojects", "cogs.media", "cogs.leaderboard", "cogs.admin"]
 
 print("Running Setup...")
 

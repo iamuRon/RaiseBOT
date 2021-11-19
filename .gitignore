@@ -2,3 +2,7 @@
 users.db
 config.py
 ffmpeg.exe
+*.pyc
+users.db
+users.db
+*.db

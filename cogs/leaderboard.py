@@ -19,6 +19,13 @@ def cleanup(ctx):
     return clnList
         
 
+"""
+Pyfro's Currency: PyFrog's
+get cave coin + pyfrog working independent of one another
+"""
+
+
+
 class LB(commands.Cog):
     def __init__(self, bot):
         self.bot = bot

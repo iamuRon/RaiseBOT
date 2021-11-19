@@ -90,8 +90,13 @@ class MyClient(discord.Client):
         chatlog.close()
         db_lookup(message.author)
         db_balInc(message.author)
-        await bot.process_commands(message)
-
+        try:
+            if message.content[0] != '.':
+             return
+            else:
+                await bot.process_commands(message)
+        except IndexError:
+            return
 
 
 @bot.command()
@@ -108,6 +113,7 @@ async def bal(ctx):
     userBal = strBal
     embed=discord.Embed(title="Balance", color=0xff00f7)
     embed.set_author(name="RaiseBot")
+    embed.set_thumbnail(url="https://i.imgur.com/3QwRkoS.png")
     embed.add_field(name=f"--- {ctx.author}'s Wallet ---", value=f"Your CaveCoin: {userBal}", inline=False)
     embed.set_footer(text="Coded by: iamu")
     await ctx.send(f"Here you go {ctx.author.mention} !")
@@ -140,7 +146,7 @@ Dont Touch Below This Comment as it is starting parameters
 
 client = MyClient()
 
-initial_extensions = ["cogs.commands", "cogs.palisprojects", "cogs.media"]
+initial_extensions = ["cogs.commands", "cogs.palisprojects", "cogs.media", "cogs.leaderboard"]
 
 print("Running Setup...")
 

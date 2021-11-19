@@ -71,7 +71,7 @@ def db_lookup(user):
 global twitchLiveList
 twitchLiveList = []
 newStreamerList = []
-@tasks.loop(seconds=30)
+@tasks.loop(seconds=60)
 async def streamer():
     with open('streamers.json', 'r') as file:
         streamers = list(json.loads(file.read()))
@@ -83,7 +83,7 @@ async def streamer():
             for i in channels:
                 channelid = i
                 newIDint = int(channelid)
-            channel = bot.get_channel(newIDint)
+                channel = bot.get_channel(newIDint)
             client_id = 'iew89f33r9gr771zwbmhen4d2guu7i'
             client_secret = 'oghcuhwz9c3pzrwe1r8itp3x9qe44g'
             body = {'client_id': client_id,'client_secret': client_secret,"grant_type": 'client_credentials'}
@@ -94,6 +94,7 @@ async def streamer():
             stream_data = stream.json()
             if len(stream_data['data']) == 1:
                 if StName not in twitchLiveList:
+                    print(f'posting {StName} is LIVE')
                     twitchLiveList.append(str(StName))
                     embed=discord.Embed(title=f":red_circle: --- {StName.upper()} IS LIVE --- :red_circle:", description=f"{stream_data['data'][0]['title']}", color=0xff00ff)
                     embed.set_thumbnail(url="https://upload.wikimedia.org/wikipedia/commons/thumb/d/d3/Twitch_Glitch_Logo_Purple.svg/878px-Twitch_Glitch_Logo_Purple.svg.png")
@@ -102,7 +103,8 @@ async def streamer():
                     await channel.send(embed=embed)
                     await channel.send(f">>> {channelURL}")
                 else:
-                    return
+                    print(f'Current Live users: {twitchLiveList}')
+                    continue
             else:
                 if StName in twitchLiveList:
                     embed=discord.Embed(title=f":black_circle: --- {StName.upper()}'s Stream has ended!' --- :black_circle:", description=f"----------", color=0xff00ff)
@@ -113,7 +115,7 @@ async def streamer():
                     await channel.send(f">>> {channelURL}")
                     twitchLiveList.remove(str(StName))
                 else:
-                    return
+                    continue
     
 
 

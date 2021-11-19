@@ -68,52 +68,52 @@ def db_lookup(user):
 #              This holds twitch live notifications I *USED TO NOT* KNOW WAT THE FUCK THIS EVEN DOES I WILL LOOK INTO LATER JUST WANNA KNOW IF IT WORKS AND IT DID
 
 #-------------------------------------------------------
-
-@tasks.loop(seconds=10)
-async def twitchstream():
-    with open('streamers.txt', 'r') as file:
-        streamers = list(file.readlines())
-    for i in streamers:
-        if "\n" in i:
-            StName = i.strip()
+global twitchLiveList
+twitchLiveList = []
+newStreamerList = []
+@tasks.loop(seconds=30)
+async def streamer():
+    with open('streamers.json', 'r') as file:
+        streamers = list(json.loads(file.read()))
+        for i in streamers:
+            StName = i[22:]
+            channelURL = i
             with open('channelids.txt', 'r') as file:
-                channels = list(file.readlines())
+                    channels = list(file.readlines())
             for i in channels:
-                if "\n" in i:
-                    channelid = i.strip()
-                    newIDint = int(channelid)
-            await streamer(StName, newIDint)
-
-
-async def streamer(name, channelid):
-    StName = name
-    placeholderList = []
-    channel = bot.get_channel(channelid)
-    client_id = 'iew89f33r9gr771zwbmhen4d2guu7i'
-    client_secret = 'oghcuhwz9c3pzrwe1r8itp3x9qe44g'
-    body = {'client_id': client_id,'client_secret': client_secret,"grant_type": 'client_credentials'}
-    r = requests.post('https://id.twitch.tv/oauth2/token', body)
-    keys = r.json()
-    headers = {'Client-ID': client_id,'Authorization': 'Bearer ' + keys['access_token']}
-    stream = requests.get('https://api.twitch.tv/helix/streams?user_login=' + StName, headers=headers)
-    stream_data = stream.json()
-    if len(stream_data['data']) == 1:
-        placeholderList.append(StName)
-        placeholder = StName + ' is live: ' + stream_data['data'][0]['title'] + ' playing ' + stream_data['data'][0]['game_name']
-        async for history in channel.history(limit=200):
-            if StName not in history.content:
-                for i in placeholderList:
-                    if i != StName:
-                        await channel.send(placeholder)
-                        return
+                channelid = i
+                newIDint = int(channelid)
+            channel = bot.get_channel(newIDint)
+            client_id = 'iew89f33r9gr771zwbmhen4d2guu7i'
+            client_secret = 'oghcuhwz9c3pzrwe1r8itp3x9qe44g'
+            body = {'client_id': client_id,'client_secret': client_secret,"grant_type": 'client_credentials'}
+            r = requests.post('https://id.twitch.tv/oauth2/token', body)
+            keys = r.json()
+            headers = {'Client-ID': client_id,'Authorization': 'Bearer ' + keys['access_token']}
+            stream = requests.get('https://api.twitch.tv/helix/streams?user_login=' + StName, headers=headers)
+            stream_data = stream.json()
+            if len(stream_data['data']) == 1:
+                if StName not in twitchLiveList:
+                    twitchLiveList.append(str(StName))
+                    embed=discord.Embed(title=f":red_circle: --- {StName.upper()} IS LIVE --- :red_circle:", description=f"{stream_data['data'][0]['title']}", color=0xff00ff)
+                    embed.set_thumbnail(url="https://upload.wikimedia.org/wikipedia/commons/thumb/d/d3/Twitch_Glitch_Logo_Purple.svg/878px-Twitch_Glitch_Logo_Purple.svg.png")
+                    embed.add_field(name=f">>  __PLAYING__  <<", value = f" _'{stream_data['data'][0]['game_name']}'_", inline=False)
+                    embed.set_footer(text="Coded by: iamu")
+                    await channel.send(embed=embed)
+                    await channel.send(f">>> {channelURL}")
                 else:
                     return
-    else:
-        if StName in placeholderList:
-            placeholderList.remove(StName)
-            print(placeholderList)
-        else:
-            return
+            else:
+                if StName in twitchLiveList:
+                    embed=discord.Embed(title=f":black_circle: --- {StName.upper()}'s Stream has ended!' --- :black_circle:", description=f"----------", color=0xff00ff)
+                    embed.set_thumbnail(url="https://upload.wikimedia.org/wikipedia/commons/thumb/d/d3/Twitch_Glitch_Logo_Purple.svg/878px-Twitch_Glitch_Logo_Purple.svg.png")
+                    embed.add_field(name=f">>  Check below to watch what you missed!  <<", value = "-", inline=False)
+                    embed.set_footer(text="Coded by: iamu")
+                    await channel.send(embed=embed)
+                    await channel.send(f">>> {channelURL}")
+                    twitchLiveList.remove(str(StName))
+                else:
+                    return
     
 
 
@@ -137,7 +137,7 @@ class MyClient(discord.Client):
         status = ['Use .help for commands','Coded by: iamu & PaliKai', f'A part of {serverCount} servers!']
         displaying = cycle(status)
         running = True
-        await twitchstream.start()
+        await streamer.start()
         while running:
             currentStatus = next(displaying)
             await bot.change_presence(status=discord.Status.online, activity=discord.Activity(name=currentStatus ,type=2))
@@ -192,13 +192,22 @@ async def bal(ctx):
     await ctx.send(embed=embed)
             
 @bot.command(name='addtwitch', help='Adds your Twitch to the live notifs. (ADMIN ONLY)', pass_context=True)
-async def add_twitch(ctx, twitch_name):
+async def add_twitch(ctx, *, twitch_name):
     if ctx.author.guild_permissions.administrator:
+        twitch_name = twitch_name.split()
+        if (len(twitch_name) != 2):
+            await ctx.send("Syntax: .addtwitch <twitch channel name> <twitch URL>")
+            return
+        with open('streamers.json', 'r') as file:
+            streamers = json.loads(file.read())
+        # Assigns their given twitch_name to their discord id and adds it to the streamers.json.
+        streamers[twitch_name[1]] = twitch_name[0]
+        
         # Adds the changes we made to the json file.
-        with open('streamers.txt', 'a') as file:
-            file.writelines(f"{twitch_name}\n")
+        with open('streamers.json', 'w') as file:
+            file.write(json.dumps(streamers))
         # Tells the user it worked.
-        await ctx.send(f"Added {twitch_name} for {ctx.author} to the notifications list.")
+        await ctx.send(f"Added {twitch_name} for {ctx.author.mention} to the notifications list.")
     else:
         await ctx.send(f"Sorry bozo you're not the boss of me!")
 
@@ -208,8 +217,7 @@ async def add_twitch_notification_channel(ctx, channelID):
     if ctx.author.guild_permissions.administrator:
         with open('channelids.txt', 'a') as file:
             file.writelines(f"{channelID}\n")
-        # Tells the user it worked.
-        await ctx.send(f"Added {channelID} for {ctx.author} to the notifications list.")
+        await ctx.send(f"Added {channelID} for {ctx.author.mention} to the channel list.")
     else:
         await ctx.send(f"Sorry bozo you're not the boss of me!")
             

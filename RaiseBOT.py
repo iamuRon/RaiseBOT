@@ -65,7 +65,7 @@ def db_lookup(user):
 
 #-------------------------------------------------------
 
-#              This holds twitch live notifications I *USED TO NOT* KNOW WAT THE FUCK THIS EVEN DOES I WILL LOOK INTO LATER JUST WANNA KNOW IF IT WORKS AND IT DID
+#              This holds twitch live notifications
 
 #-------------------------------------------------------
 global twitchLiveList
@@ -121,7 +121,7 @@ async def streamer():
 
 #-------------------------------------------------------
 
-#              This holds twitch live notifications I *USED TO NOT* KNOW WAT THE FUCK THIS EVEN DOES I WILL LOOK INTO LATER JUST WANNA KNOW IF IT WORKS AND IT DID
+#              This holds twitch live notifications
 
 #-------------------------------------------------------
 

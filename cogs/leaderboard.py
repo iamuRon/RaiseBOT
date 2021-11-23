@@ -106,7 +106,7 @@ class LB(commands.Cog):
             t10List.reverse()
             t10List.pop(0)
             for i in t10List:
-                if user in str(i[0]).lower():
+                if user.lower() in str(i[0]).lower():
                     embed=discord.Embed(title="Leaderboard Search:", description=f"{i[0]}'s Total {userCheck[guildCheck][1]}'s:", color=0xff00ff)
                     embed.set_thumbnail(url="https://i.imgur.com/3QwRkoS.png")
                     embed.add_field(name=f">> {i[1]} <<", value=f"{i[0]}'s Rank:", inline=False)

@@ -130,9 +130,6 @@ class LB(commands.Cog):
             with open('currency.json', 'w') as file:
                 file.write(json.dumps(currencyChange))
             await ctx.send(f"Added {currencyChange} for {ctx.author.mention} to the notifications list.")
-            # except DiscordServerError():
-            #     await ctx.send('Syntax: .chcr <Curreny Name Here>')
-            #     return
         else:
             await ctx.send(f'Sorry {ctx.author.mention}, you are not the boss of me!')
 

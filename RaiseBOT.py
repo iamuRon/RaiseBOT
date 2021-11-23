@@ -125,11 +125,10 @@ async def streamer():
 async def status():
         serverCount = len(list(bot.guilds))
         status = ['Use .help for commands','Coded by: iamu & PaliKai', f'A part of {serverCount} servers!']
-        await bot.change_presence(status=discord.Status.online, activity=discord.Activity(name=status[0] ,type=2))
-        await sleep(30)
-        await bot.change_presence(status=discord.Status.online, activity=discord.Activity(name=status[1] ,type=2))
-        await sleep(30)
-        await bot.change_presence(status=discord.Status.online, activity=discord.Activity(name=status[2] ,type=2))
+        while True:
+            for i in status:
+                await bot.change_presence(status=discord.Status.online, activity=discord.Activity(name=i ,type=2))
+                await sleep(10)
 
 
 class MyClient(discord.Client):

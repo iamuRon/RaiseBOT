@@ -8,6 +8,7 @@ https://docs.pycord.dev/en/master/index.html
 https://docs.pycord.dev/en/master/api.html
 
 '''
+from discord import channel
 import config
 from discord.ext import commands, tasks
 import discord
@@ -76,10 +77,6 @@ async def streamer():
             channelURL = i
             with open('channelids.txt', 'r') as file:
                     channels = list(file.readlines())
-            for i in channels:
-                channelid = i
-                newIDint = int(channelid)
-                channel = bot.get_channel(newIDint)
             client_id = 'iew89f33r9gr771zwbmhen4d2guu7i'
             client_secret = 'oghcuhwz9c3pzrwe1r8itp3x9qe44g'
             body = {'client_id': client_id,'client_secret': client_secret,"grant_type": 'client_credentials'}
@@ -90,26 +87,72 @@ async def streamer():
             stream_data = stream.json()
             if len(stream_data['data']) == 1:
                 if StName not in twitchLiveList:
-                    print(f'posting {StName} is LIVE')
-                    twitchLiveList.append(str(StName))
-                    embed=discord.Embed(title=f":red_circle: --- {StName.upper()} IS LIVE --- :red_circle:", description=f"{stream_data['data'][0]['title']}", color=0xff00ff)
-                    embed.set_thumbnail(url="https://upload.wikimedia.org/wikipedia/commons/thumb/d/d3/Twitch_Glitch_Logo_Purple.svg/878px-Twitch_Glitch_Logo_Purple.svg.png")
-                    embed.add_field(name=f">>  __PLAYING__  <<", value = f" _'{stream_data['data'][0]['game_name']}'_", inline=False)
-                    embed.set_footer(text="Coded by: iamu")
-                    await channel.send(embed=embed)
-                    await channel.send(f">>> {channelURL}")
+                    with open('whitelist.json', 'r') as file:
+                        whitelistList = json.loads(file.read())
+                        print(whitelistList)
+                    for key in whitelistList:
+                        value = whitelistList[key]
+                        # print(value)
+                        if StName in value[1]:
+                            # print('value')
+                            embed=discord.Embed(title=f":red_circle: --- {StName.upper()} IS LIVE --- :red_circle:", description=f"{stream_data['data'][0]['title']}", color=0xff00ff)
+                            embed.set_thumbnail(url="https://upload.wikimedia.org/wikipedia/commons/thumb/d/d3/Twitch_Glitch_Logo_Purple.svg/878px-Twitch_Glitch_Logo_Purple.svg.png")
+                            embed.add_field(name=f">>  __PLAYING__  <<", value = f" _'{stream_data['data'][0]['game_name']}'_", inline=False)
+                            embed.set_footer(text="Coded by: iamu")
+                            for i in channels:
+                                wlChannel = int(value[0])
+                                newChannel = int(i)
+                                if newChannel == wlChannel:
+                                    for x in value[1]:
+                                        print(x)
+                                        if StName == x:
+                                            channelid = i
+                                            print(i)
+                                            newIDint = int(channelid)
+                                            channel = bot.get_channel(newIDint)
+                                            await channel.send(embed=embed)
+                                            await channel.send(f">>> {channelURL}")
+                                            if StName not in twitchLiveList:
+                                                twitchLiveList.append(StName)
+                                            else:
+                                                continue
+                                        else:
+                                            continue
+                        else:
+                            continue
                 else:
                     print(f'Current Live users: {twitchLiveList}')
                     continue
             else:
                 if StName in twitchLiveList:
-                    embed=discord.Embed(title=f":black_circle: --- {StName.upper()}'s Stream has ended!' --- :black_circle:", description=f"----------", color=0xff00ff)
-                    embed.set_thumbnail(url="https://upload.wikimedia.org/wikipedia/commons/thumb/d/d3/Twitch_Glitch_Logo_Purple.svg/878px-Twitch_Glitch_Logo_Purple.svg.png")
-                    embed.add_field(name=f">>  Check below to watch what you missed!  <<", value = "-", inline=False)
-                    embed.set_footer(text="Coded by: iamu")
-                    await channel.send(embed=embed)
-                    await channel.send(f">>> {channelURL}")
-                    twitchLiveList.remove(str(StName))
+                    with open('whitelist.json', 'r') as file:
+                        whitelistList = json.loads(file.read())
+                    with open('channelids.txt', 'r') as file:
+                        channels = list(file.readlines())
+                    for key in whitelistList:
+                        value = whitelistList[key]
+                        print(value)
+                        if StName in value[1]:
+                            embed=discord.Embed(title=f":black_circle: --- {StName.upper()}'s Stream has ended!' --- :black_circle:", description=f"----------", color=0xff00ff)
+                            embed.set_thumbnail(url="https://upload.wikimedia.org/wikipedia/commons/thumb/d/d3/Twitch_Glitch_Logo_Purple.svg/878px-Twitch_Glitch_Logo_Purple.svg.png")
+                            embed.add_field(name=f">>  Check below to watch what you missed!  <<", value = "-", inline=False)
+                            embed.set_footer(text="Coded by: iamu")
+                            for i in channels:
+                                wlChannel = int(value[0])
+                                newChannel = int(i)
+                                if newChannel == wlChannel:
+                                    for x in value[1]:
+                                        if StName == x:
+                                            channelid = i
+                                            newIDint = int(channelid)
+                                            newIDint = int(channelid)
+                                            channel = bot.get_channel(newIDint)
+                                            await channel.send(embed=embed)
+                                            await channel.send(f">>> {channelURL}")
+                                            if StName in twitchLiveList:
+                                                twitchLiveList.remove(StName)
+                                            else:
+                                                continue
                 else:
                     continue
     
@@ -222,6 +265,38 @@ async def add_twitch_notification_channel(ctx, channelID):
         with open('channelids.txt', 'a') as file:
             file.writelines(f"{channelID}\n")
         await ctx.send(f"Added {channelID} for {ctx.author.mention} to the channel list.")
+    else:
+        await ctx.send(f"Sorry bozo you're not the boss of me!")
+
+@bot.command(name='wl', help='Makes a whitelist to block unwanted streamers from notifs (ADMIN ONLY)', pass_context=True)
+async def whitelist(ctx, *, streamers):
+    if ctx.author.guild_permissions.administrator:
+        if ' ' in streamers:
+            newStreamers = streamers.split()
+            with open('whitelist.json', 'r') as file:
+                wlStreamers = json.loads(file.read())
+            print(wlStreamers)
+            server = str(ctx.author.guild)
+            channelid = int(ctx.channel.id)
+            cInfo = [server, channelid]
+            for i in newStreamers:
+                cInfo.append(i)
+            wlStreamers[cInfo[0]] = [cInfo[1], cInfo[2:]]
+            with open('whitelist.json', 'w') as file:
+                file.write(json.dumps(wlStreamers))
+            await ctx.send(f"Added {wlStreamers} for {ctx.author.mention} to the notifications list.")
+        else:
+            with open('whitelist.json', 'r') as file:
+                wlStreamers = json.loads(file.read())
+            print(wlStreamers)
+            server = str(ctx.author.guild)
+            channelid = int(ctx.channel.id)
+            cInfo = [server, channelid]
+            streamersList = [streamers]
+            wlStreamers[cInfo[0]] = [cInfo[1], streamersList]
+            with open('whitelist.json', 'w') as file:
+                file.write(json.dumps(wlStreamers))
+            await ctx.send(f"Added {wlStreamers} for {ctx.author.mention} to the notifications list.")
     else:
         await ctx.send(f"Sorry bozo you're not the boss of me!")
             

@@ -96,7 +96,8 @@ async def streamer():
                     embed.set_thumbnail(url="https://upload.wikimedia.org/wikipedia/commons/thumb/d/d3/Twitch_Glitch_Logo_Purple.svg/878px-Twitch_Glitch_Logo_Purple.svg.png")
                     embed.add_field(name=f">>  __PLAYING__  <<", value = f" _'{stream_data['data'][0]['game_name']}'_", inline=False)
                     embed.set_footer(text="Coded by: iamu")
-                    await channel.send(embed=embed + f"\n>>> {channelURL}")
+                    await channel.send(embed=embed)
+                    await channel.send(f">>> {channelURL}")
                 else:
                     print(f'Current Live users: {twitchLiveList}')
                     continue
@@ -121,14 +122,16 @@ async def streamer():
 
 #-------------------------------------------------------
 
-@tasks.loop(seconds = 30)
 async def status():
+        streamer.start()
         serverCount = len(list(bot.guilds))
         status = ['Use .help for commands','Coded by: iamu & PaliKai', f'A part of {serverCount} servers!']
         while True:
             for i in status:
                 await bot.change_presence(status=discord.Status.online, activity=discord.Activity(name=i ,type=2))
                 await sleep(10)
+
+            
 
 
 class MyClient(discord.Client):
@@ -139,8 +142,7 @@ class MyClient(discord.Client):
     async def on_ready():
         ping = int(bot.latency * 1000)
         print(f"Logged in as: {bot.user} | {ping}ms\n" + f"Active Database(s): {active_databases}\n" + "--------")
-        await status()
-        await streamer()
+        await bot.loop.create_task(status())
         
 
     @bot.event

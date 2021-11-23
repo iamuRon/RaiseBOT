@@ -16,7 +16,7 @@ def Sort(li):
 
 def cleanup(ctx, author):
     with open('currency.json', 'r') as file:
-            currencyChange = json.loads(file.read())
+        currencyChange = json.loads(file.read())
     newUserCheck = currencyChange
     newGuildCheck = author
     clnList = []
@@ -49,7 +49,6 @@ class LB(commands.Cog):
             await ctx.send(f'Sorry {ctx.author.mention}, this server has not defined a currency yet!')
             return
         else:
-            print(userCheck)
             t10List = list(c.execute("SELECT * FROM users WHERE bal>0", ()))
             t10Sorted = Sort(t10List)
             t10Sorted.reverse()
@@ -130,6 +129,7 @@ class LB(commands.Cog):
             with open('currency.json', 'w') as file:
                 file.write(json.dumps(currencyChange))
             await ctx.send(f"Added {currencyChange} for {ctx.author.mention} to the notifications list.")
+            print(currencyChange)
         else:
             await ctx.send(f'Sorry {ctx.author.mention}, you are not the boss of me!')
 

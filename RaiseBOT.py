@@ -254,7 +254,7 @@ async def add_twitch(ctx, *, twitch_name):
         streamers[twitch_name[1]] = twitch_name[0]
         with open('streamers.json', 'w') as file:
             file.write(json.dumps(streamers))
-        await ctx.send(f"Added {twitch_name} for {ctx.author.mention} to the notifications list.")
+        await ctx.send(f"Added {streamers} for {ctx.author.mention} to the notifications list.")
     else:
         await ctx.send(f"Sorry bozo you're not the boss of me!")
 

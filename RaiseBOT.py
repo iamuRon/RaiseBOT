@@ -9,18 +9,14 @@ https://docs.pycord.dev/en/master/api.html
 
 '''
 import config
-from discord import channel, message
 from discord.ext import commands, tasks
 import discord
 import json
-import os
 import sqlite3
-from itertools import cycle
-import asyncio
+from asyncio import sleep
 import json
 import requests
 from discord.ext import tasks
-from twitchAPI.twitch import Twitch
 
 intents = discord.Intents.all()
 
@@ -129,9 +125,11 @@ async def streamer():
 async def status():
         serverCount = len(list(bot.guilds))
         status = ['Use .help for commands','Coded by: iamu & PaliKai', f'A part of {serverCount} servers!']
-        displaying = cycle(status)
-        currentStatus = next(displaying)
-        await bot.change_presence(status=discord.Status.online, activity=discord.Activity(name=currentStatus ,type=2))
+        await bot.change_presence(status=discord.Status.online, activity=discord.Activity(name=status[0] ,type=2))
+        await sleep(30)
+        await bot.change_presence(status=discord.Status.online, activity=discord.Activity(name=status[1] ,type=2))
+        await sleep(30)
+        await bot.change_presence(status=discord.Status.online, activity=discord.Activity(name=status[2] ,type=2))
 
 
 class MyClient(discord.Client):

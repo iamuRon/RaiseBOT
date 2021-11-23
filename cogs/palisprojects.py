@@ -82,7 +82,7 @@ class Pali(commands.Cog):
             embed.set_author(name="Coinflip")
             embed.set_footer(text="Coded by: Pali")
             await ctx.send(embed=embed)
-
+        
     @commands.command(aliases=['gmame'])
     async def game(self, ctx):
         i = 0

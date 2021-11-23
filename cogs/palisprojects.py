@@ -95,18 +95,6 @@ class Pali(commands.Cog):
         await message.edit(content="##########")
         print("done")
 
-    @commands.command(aliases=['gmame'])
-    async def game(self, ctx):
-        i = 0
-        txt=["@","#","#","#","#","#","#","#","#","#"]
-        message = await ctx.send("".join(txt))
-        while(i<10):
-            i+=1
-            await message.edit(content="".join(txt))
-            txt.insert(0, txt.pop(-1))
-        await message.edit(content="##########")
-        print("done")
-
 #------------------------------------------------------
 #   Hello Pali this file is for you. you can put your 
 #   code in below. You can also refer to the other functions

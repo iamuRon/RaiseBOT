@@ -100,8 +100,7 @@ async def streamer():
                     embed.set_thumbnail(url="https://upload.wikimedia.org/wikipedia/commons/thumb/d/d3/Twitch_Glitch_Logo_Purple.svg/878px-Twitch_Glitch_Logo_Purple.svg.png")
                     embed.add_field(name=f">>  __PLAYING__  <<", value = f" _'{stream_data['data'][0]['game_name']}'_", inline=False)
                     embed.set_footer(text="Coded by: iamu")
-                    await channel.send(embed=embed)
-                    await channel.send(f">>> {channelURL}")
+                    await channel.send(embed=embed + f"\n>>> {channelURL}")
                 else:
                     print(f'Current Live users: {twitchLiveList}')
                     continue
@@ -126,6 +125,14 @@ async def streamer():
 
 #-------------------------------------------------------
 
+@tasks.loop(seconds = 30)
+async def status():
+        serverCount = len(list(bot.guilds))
+        status = ['Use .help for commands','Coded by: iamu & PaliKai', f'A part of {serverCount} servers!']
+        displaying = cycle(status)
+        currentStatus = next(displaying)
+        await bot.change_presence(status=discord.Status.online, activity=discord.Activity(name=currentStatus ,type=2))
+
 
 class MyClient(discord.Client):
     
@@ -135,16 +142,8 @@ class MyClient(discord.Client):
     async def on_ready():
         ping = int(bot.latency * 1000)
         print(f"Logged in as: {bot.user} | {ping}ms\n" + f"Active Database(s): {active_databases}\n" + "--------")
-        serverCount = len(list(bot.guilds))
-        status = ['Use .help for commands','Coded by: iamu & PaliKai', f'A part of {serverCount} servers!']
-        displaying = cycle(status)
-        running = True
-        await streamer.start()
-        while running:
-            currentStatus = next(displaying)
-            await bot.change_presence(status=discord.Status.online, activity=discord.Activity(name=currentStatus ,type=2))
-            await asyncio.sleep(20)
-        
+        await status()
+        await streamer()
         
 
     @bot.event
@@ -182,16 +181,24 @@ async def ping(ctx):
 @bot.command(aliases=['balance', 'wallet', 'cc', 'CaveCoin', 'cavecoin'])
 async def bal(ctx):
     """Displays your balance in the CaveCoin wallet!"""
-    balance = db_lookup(ctx.author)
-    strBal = balance[0][1]
-    userBal = strBal
-    embed=discord.Embed(title="Balance", color=0xff00f7)
-    embed.set_author(name="RaiseBot")
-    embed.set_thumbnail(url="https://i.imgur.com/3QwRkoS.png")
-    embed.add_field(name=f"--- {ctx.author}'s Wallet ---", value=f"Your CaveCoin: {userBal}", inline=False)
-    embed.set_footer(text="Coded by: iamu")
-    await ctx.send(f"Here you go {ctx.author.mention} !")
-    await ctx.send(embed=embed)
+    with open('currency.json', 'r') as file:
+        currencyChange = json.loads(file.read())
+    userCheck = currencyChange
+    guildCheck = str(ctx.author.guild)
+    if guildCheck not in userCheck:
+        await ctx.send(f'Sorry {ctx.author.mention}, this server has not defined a currency yet!')
+        return
+    else:
+        balance = db_lookup(ctx.author)
+        strBal = balance[0][1]
+        userBal = strBal
+        embed=discord.Embed(title="Balance", color=0xff00f7)
+        embed.set_author(name="RaiseBot")
+        embed.set_thumbnail(url="https://i.imgur.com/3QwRkoS.png")
+        embed.add_field(name=f"--- {ctx.author}'s Wallet ---", value=f"Your {userCheck[guildCheck][1]}: {userBal}", inline=False)
+        embed.set_footer(text="Coded by: iamu")
+        await ctx.send(f"Here you go {ctx.author.mention} !")
+        await ctx.send(embed=embed)
             
 @bot.command(name='addtwitch', help='Adds your Twitch to the live notifs. (ADMIN ONLY)', pass_context=True)
 async def add_twitch(ctx, *, twitch_name):
@@ -202,13 +209,9 @@ async def add_twitch(ctx, *, twitch_name):
             return
         with open('streamers.json', 'r') as file:
             streamers = json.loads(file.read())
-        # Assigns their given twitch_name to their discord id and adds it to the streamers.json.
         streamers[twitch_name[1]] = twitch_name[0]
-        
-        # Adds the changes we made to the json file.
         with open('streamers.json', 'w') as file:
             file.write(json.dumps(streamers))
-        # Tells the user it worked.
         await ctx.send(f"Added {twitch_name} for {ctx.author.mention} to the notifications list.")
     else:
         await ctx.send(f"Sorry bozo you're not the boss of me!")

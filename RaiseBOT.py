@@ -400,27 +400,35 @@ def createReactionRole(guild,channel,message,reaction,role):
                 return
     guildReactions.append(rr)
 
+
 @bot.command()
-# !reactionRole "Embed Title" "Embed Description" (🐶 954468370156236840) (💀 954500389795942460)
+# .reactionRole "Embed Title" "Embed Description" (🐶 954468370156236840) (💀 954500389795942460)
 async def reactionRole(ctx, *args):
-    if(ctx.author.guild_permissions.administrator):
-        embed=discord.Embed(title=args[0], description=args[1])
-        message = await ctx.send(embed=embed)
-        reactionroles = []
+    try:
+        if(ctx.author.guild_permissions.administrator):
+            embed=discord.Embed(title=args[0], description=args[1])
+            message = await ctx.send(embed=embed)
+            reactionroles = []
+            for i in range(int((len(args)-2)/2)):
+                str1 = str(str(args[i*2+2]) + " " + str(args[i*2+3]))
+                str1 = str1.replace("(","").replace(")","")
+                reactionroles.append(str1)
+                for x in reactionroles:
+                    tup = tuple(map(str, x.split(' ')))
+                    await message.add_reaction(tup[0])
+                    roleID = str(tup[1].replace("<@&","").replace(">",""))
+                    createReactionRole(ctx.guild.id,ctx.channel.id,message.id,str(tup[0]),int(roleID))
+            updateJSON()
+        else:
+            await ctx.send("You need to be an administrator to use this command!")
+    except ValueError:
+            await ctx.send('ERROR: PLEASE USE THIS SYNTAX!!!(WiP) \n.reactionRole "Embed Title" "1️⃣ : Role1\n2️⃣ : Role2" (1️⃣ @Role1) (2️⃣ @Role2)')
 
-        for i in range(int((len(args)-2)/2)):
-            str1 = str(str(args[i*2+2]) + " " + str(args[i*2+3]))
-            str1 = str1.replace("(","").replace(")","")
-            reactionroles.append(str1)
-        for x in reactionroles:
-            tup = tuple(map(str, x.split(' ')))
-            await message.add_reaction(tup[0])
-            roleID = str(tup[1].replace("<@&","").replace(">",""))
-            createReactionRole(ctx.guild.id,ctx.channel.id,message.id,str(tup[0]),int(roleID))
-
-        updateJSON()
-    else:
-        await ctx.send("You need to be an administrator to use this command!")
+@reactionRole.error
+async def play_error(ctx, error):
+    if isinstance(error, discord.errors.HTTPException):
+        await ctx.send('Error: PLEASE USE THIS SYNTAX!!!(WiP)\nSyntax: .reactionRole "Embed Title" "1️⃣ : Role1\n2️⃣ : Role2" (1️⃣ @Role1) (2️⃣ @Role2)')
+        return
 
 
 @bot.command()

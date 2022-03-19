@@ -138,6 +138,8 @@ class LB(commands.Cog):
         if isinstance(error, commands.MissingRequiredArgument):
             await ctx.send('Error: Syntax: .chcr <Curreny Name Here>')
             return
+
+    
                 
         
 

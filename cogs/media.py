@@ -7,6 +7,10 @@ from discord.ext import commands
 
 # Suppress noise about console usage from errors
 youtube_dl.utils.bug_reports_message = lambda: ""
+global recentSongs, tempRecentSongs, tempNewRecent
+recentSongs = []
+tempRecentSongs = []
+tempNewRecent = []
 
 
 ytdl_format_options = {
@@ -20,7 +24,7 @@ ytdl_format_options = {
     "quiet": True,
     "no_warnings": True,
     "default_search": "auto",
-    "source_address": "192.168.1.45",  # bind to ipv4 since ipv6 addresses cause issues sometimes
+    "source_address": "192.168.1.33",  # bind to ipv4 since ipv6 addresses cause issues sometimes
 }
 
 ffmpeg_options = {"options": "-vn"}
@@ -75,6 +79,7 @@ class Music(commands.Cog):
             ctx.voice_client.play(
                 player, after=lambda e: print(f"Player error: {e}") if e else None
             )
+        recentSongs.append((str(player.title), str(ctx.author.guild), str(ctx.message.author)))
 
         embed=discord.Embed(title="Now Playing:", description=f"{player.title}", color=0xff00ff)
         embed.set_author(name="RaiseBot")
@@ -182,7 +187,26 @@ class Music(commands.Cog):
             )
         await asyncio.sleep(8)
         await ctx.voice_client.disconnect()
+    @commands.command(aliases=['rs'])
+    async def recentsongs(self, ctx):
+        """See what everyone is listening to!"""
+        if recentSongs == []:
+            await ctx.channel.send("Sorry! Looks like nobody has listened to anything today! :(")
+        else:
+            recentSongs.reverse()
+            for i in recentSongs:
+                new_recent = i
+                tempRecentSongs.append(f"{new_recent[0]} --[[ Requested by: {new_recent[2]} from the {new_recent[1]} server! ]]--")
+            newrecent = '\n \n'.join(str(e) for e in tempRecentSongs)
+            embed=discord.Embed(title="Recent Songs:", description=f"{newrecent}", color=0xff00ff)
+            embed.set_footer(text="Coded by: iamu")
+            await ctx.send(embed=embed)
 
+    @play.error
+    async def play_error(self, ctx, error):
+        if isinstance(error, commands.CommandNotFound):
+            await ctx.send('Error: Syntax: .play [URL or search here]')
+            return
 
 def setup(bot):
     bot.add_cog(Music(bot))

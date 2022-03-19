@@ -95,6 +95,12 @@ class Pali(commands.Cog):
         await message.edit(content="##########")
         print("done")
 
+    @rps.error
+    async def rps_error(self, ctx, error):
+        if isinstance(error, ValueError):
+            await ctx.send('Error: Syntax: .rps [choice] [amount]')
+            return 
+
 #------------------------------------------------------
 #   Hello Pali this file is for you. you can put your 
 #   code in below. You can also refer to the other functions

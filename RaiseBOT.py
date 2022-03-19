@@ -24,6 +24,10 @@ intents = discord.Intents.all()
 
 bot = commands.Bot(command_prefix= ".", intents = intents)
 
+#=============================
+#  DATABASE / SQL
+#=============================
+
 db = sqlite3.connect('users.db')
 c = db.cursor()
 
@@ -201,9 +205,21 @@ async def status():
                 await bot.change_presence(status=discord.Status.online, activity=discord.Activity(name=i ,type=2))
                 await sleep(10)
 
-            
+#=============================
+#  REACTION ROLES START HERE
+#=============================
+with open("reactionServers.json") as jsonFile:
+    guildReactions = json.load(jsonFile)
+    print(guildReactions)
+
+#=============================
+#  REACTION ROLES PAUSE HERE
+#=============================
 
 
+#=============================
+#           MAIN
+#=============================
 class MyClient(discord.Client):
     
 
@@ -243,12 +259,19 @@ class MyClient(discord.Client):
         else:
             return
 
+#=============================
+#  Default Commands
+#=============================
 
 @bot.command()
 async def ping(ctx):
         """Pong!"""
         ping = int(bot.latency * 1000)
         await ctx.send(f"Pong! | {ping}ms")
+
+#=============================
+#  Currency Lookup
+#=============================
 
 @bot.command(aliases=['balance', 'wallet', 'cc', 'CaveCoin', 'cavecoin'])
 async def bal(ctx):
@@ -271,7 +294,10 @@ async def bal(ctx):
         embed.set_footer(text="Coded by: iamu")
         await ctx.send(f"Here you go {ctx.author.mention} !")
         await ctx.send(embed=embed)
-            
+
+#===========================================
+#  Twitch Live Notification Setup Commands
+#===========================================
 @bot.command(name='addtwitch', help='Adds your Twitch to the live notifs. (ADMIN ONLY)', pass_context=True)
 async def add_twitch(ctx, *, twitch_name):
     if ctx.author.guild_permissions.administrator:
@@ -330,11 +356,100 @@ async def whitelist(ctx, *, streamers):
     else:
         await ctx.send(f"Sorry bozo you're not the boss of me!")
 
+#=============================
+#  REACTION ROLES RESUME HERE
+#=============================
+@bot.event
+async def on_raw_reaction_add(payload):
+    if bot.get_user(payload.user_id) != bot.user:
+        rr = (payload.guild_id,payload.channel_id,payload.message_id,None)
+        for x in guildReactions:
+            if (isSameMessageAs(rr,x)):
+                for y in x[3]:
+                    if (str(y[0]) == str(payload.emoji)):
+                        guild = bot.get_guild(payload.guild_id)
+                        member = guild.get_member(payload.user_id)
+                        await member.add_roles(guild.get_role(y[1]))
 
-            
-            
-            
+@bot.event
+async def on_raw_reaction_remove(payload):
+    if bot.get_user(payload.user_id) != bot.user:
+        rr = (payload.guild_id,payload.channel_id,payload.message_id,None)
+        for x in guildReactions:
+            if (isSameMessageAs(rr,x)):
+                for y in x[3]:
+                    if (str(y[0]) == str(payload.emoji)):
+                        guild = bot.get_guild(payload.guild_id)
+                        member = guild.get_member(payload.user_id)
+                        await member.remove_roles(guild.get_role(y[1]))
 
+@bot.event
+async def on_raw_message_delete(payload):
+    rr = (payload.guild_id,payload.channel_id,payload.message_id,None)
+    for x in guildReactions:
+        if (isSameMessageAs(rr,x)):
+            guildReactions.remove(x)
+    updateJSON()
+
+def createReactionRole(guild,channel,message,reaction,role):
+    rr = (guild,channel,message,[(reaction,role)])
+    for x in guildReactions:
+        if (isSameMessageAs(x,rr)):
+            if not (x[3] in ((reaction,role))):
+                x[3].append((reaction,role))
+                return
+    guildReactions.append(rr)
+
+@bot.command()
+# !reactionRole "Embed Title" "Embed Description" (🐶 954468370156236840) (💀 954500389795942460)
+async def reactionRole(ctx, *args):
+    if(ctx.author.guild_permissions.administrator):
+        embed=discord.Embed(title=args[0], description=args[1])
+        message = await ctx.send(embed=embed)
+        reactionroles = []
+
+        for i in range(int((len(args)-2)/2)):
+            str1 = str(str(args[i*2+2]) + " " + str(args[i*2+3]))
+            str1 = str1.replace("(","").replace(")","")
+            reactionroles.append(str1)
+        for x in reactionroles:
+            tup = tuple(map(str, x.split(' ')))
+            await message.add_reaction(tup[0])
+            roleID = str(tup[1].replace("<@&","").replace(">",""))
+            createReactionRole(ctx.guild.id,ctx.channel.id,message.id,str(tup[0]),int(roleID))
+
+        updateJSON()
+    else:
+        await ctx.send("You need to be an administrator to use this command!")
+
+
+@bot.command()
+async def embed(ctx, title, description):
+    embed=discord.Embed(title=title, description=description)
+    await ctx.send(embed=embed)
+
+@bot.command()
+async def me(ctx):
+    msg = "Hi " + ctx.author.mention
+    await ctx.send(msg)
+
+def updateJSON():
+    with open('reactionServers.json', 'w') as jsonFile:
+        json.dump(guildReactions, jsonFile)
+        jsonFile.close()
+
+    
+def isSameMessageAs(tup1,tup2):
+    if (tup1[0] == tup2[0]):
+        if (tup1[1] == tup2[1]):
+            if (tup1[2] == tup2[2]):
+                return True
+    return False
+            
+            
+#=============================
+#  REACTION ROLES END HERE
+#=============================
 
 
 

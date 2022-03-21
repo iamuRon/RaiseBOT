@@ -8,6 +8,8 @@ https://docs.pycord.dev/en/master/index.html
 https://docs.pycord.dev/en/master/api.html
 
 '''
+from ast import alias
+import os
 from asyncio.windows_events import NULL
 from discord import channel
 import config
@@ -19,6 +21,19 @@ from asyncio import sleep
 import json
 import requests
 from discord.ext import tasks
+os.add_dll_directory("C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v11.2/bin")
+import tensorflow as tf
+import aiohttp
+import shutil
+from keras.models import sequential
+from keras.layers import Dense, Flatten, Conv2D, MaxPooling2D, Dropout
+from keras import layers
+import numpy as np
+import matplotlib.pyplot as plt
+from keras.datasets import cifar10
+plt.style.use('fivethirtyeight')
+
+(x_train, y_train), (x_test, y_test) = cifar10.load_data()
 
 intents = discord.Intents.all()
 
@@ -239,7 +254,7 @@ class MyClient(discord.Client):
 
     @bot.event
     async def on_message(message):
-        if message.author.guild is not NULL:
+        try:
             context = [f"Server: {message.author.guild} -> Channel: {message.channel} -> User: {message.author} | {message.created_at} : {message.content}"]
             try:
                 with open("chatlog.txt", "a") as chatlog:
@@ -256,7 +271,7 @@ class MyClient(discord.Client):
                     await bot.process_commands(message)
             except IndexError:
                 return
-        else:
+        except AttributeError:
             return
 
 #=============================
@@ -459,6 +474,17 @@ def isSameMessageAs(tup1,tup2):
 #  REACTION ROLES END HERE
 #=============================
 
+#=============================
+#  Image Recognition
+#=============================
+@bot.command(alias = ['ir'])
+async def imagerecognition(ctx, url):
+    '''Image Recognition! .ir [url]'''
+    print("IT WORKED")
+    image_url = url
+    img_data = requests.get(image_url).content
+    with open('recognitionImages/image_name.jpg', 'wb') as handler:
+        handler.write(img_data)
 
 
 

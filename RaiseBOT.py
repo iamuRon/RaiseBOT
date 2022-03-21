@@ -21,19 +21,75 @@ from asyncio import sleep
 import json
 import requests
 from discord.ext import tasks
-os.add_dll_directory("C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v11.2/bin")
+os.add_dll_directory("C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v11.6/bin")
+os.add_dll_directory("C:/Program Files/NVIDIA/CUDNN/v8.3/bin")
+os.add_dll_directory("C:/Program Files/NVIDIA/CUDNN/v8.3/lib/x64")
 import tensorflow as tf
-import aiohttp
-import shutil
-from keras.models import sequential
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
+from keras.models import Sequential
 from keras.layers import Dense, Flatten, Conv2D, MaxPooling2D, Dropout
 from keras import layers
+from keras.utils import to_categorical
 import numpy as np
 import matplotlib.pyplot as plt
 from keras.datasets import cifar10
+from skimage.transform import resize
+import keras
 plt.style.use('fivethirtyeight')
 
+
+
 (x_train, y_train), (x_test, y_test) = cifar10.load_data()
+
+print('x_train shape:', x_train.shape)
+print('x_train shape:', y_train.shape)
+print('x_train shape:', x_test.shape)
+print('x_train shape:', y_test.shape)
+
+index = 10
+x_train[index]
+
+img = plt.imshow(x_train[index])
+
+print('The image label is:', y_train[index])
+classification = ['airplane', 'automobile', 'bird', 'cat', 'deer', 'dog', 'frog', 'horse', 'ship', 'truck']
+print('The image class is:', classification[y_train[index][0]])
+
+y_train_one_hot = to_categorical(y_train)
+y_test_one_hot = to_categorical(y_test)
+x_train = x_train / 255
+x_test = x_test / 255
+
+model = Sequential()
+#first layer
+model.add(Conv2D(32,(5,5), activation='relu', input_shape = (32,32,3)))
+#pooling layer
+model.add(MaxPooling2D(pool_size=(2,2)))
+#add another convolution layer
+model.add(Conv2D(32,(5,5), activation='relu'))
+#add another pooling layer
+model.add(MaxPooling2D(pool_size=(2,2)))
+#add a flattening layer
+model.add(Flatten())
+#add a layer with 1000 neurons
+model.add(Dense(20000, activation='relu'))
+#add a dropout layer
+model.add(Dropout(0.5))
+#add a layer with 500 neurons
+model.add(Dense(500, activation='relu'))
+#add a dropout layer
+model.add(Dropout(0.5))
+#add a layer with 250 neurons
+model.add(Dense(250, activation='relu'))
+#add a layer with 10 neurons
+model.add(Dense(10, activation='softmax'))
+model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
+#evaluate the model with test data
+model.evaluate(x_test, y_test_one_hot)[1]
+
+#training the model
+hist = model.fit(x_train, y_train_one_hot, batch_size=256, epochs=10, validation_split=0.2)
+#25:56
 
 intents = discord.Intents.all()
 
@@ -97,7 +153,7 @@ async def streamer():
             channelURL = i
             with open('channelids.txt', 'r') as file:
                     channels = list(file.readlines())
-            print("Opening channel id's")
+            #print("Opening channel id's")
             client_id = config.ID
             client_secret = config.SECRET
             body = {'client_id': client_id,'client_secret': client_secret,"grant_type": 'client_credentials'}
@@ -107,17 +163,17 @@ async def streamer():
                 headers = {'Client-ID': client_id,'Authorization': 'Bearer ' + keys['access_token']}
                 stream = requests.get('https://api.twitch.tv/helix/streams?user_login=' + StName, headers=headers)
                 stream_data = stream.json()
-                print(f"trying to get data... from {StName}")
+                # print(f"trying to get data... from {StName}")
                 try:
-                    print("attempting")
+                    #print("attempting")
                     if len(stream_data['data']) == 1:
-                        print(f"verifying data... for {StName}")
+                        #print(f"verifying data... for {StName}")
                         if StName not in twitchLiveList:
                             with open('whitelist.json', 'r') as file:
                                 whitelistList = json.loads(file.read())
                                 
                             for key in whitelistList:
-                                print(f"Checking if {StName} is in Whitelist...")
+                                #print(f"Checking if {StName} is in Whitelist...")
                                 value = whitelistList[key]
                                 # print(value)
                                 if StName in value[1]:
@@ -127,13 +183,13 @@ async def streamer():
                                     embed.add_field(name=f">>  __PLAYING__  <<", value = f" _'{stream_data['data'][0]['game_name']}'_", inline=False)
                                     embed.set_footer(text="Coded by: iamu")
                                     for i in channels:
-                                        print(f"Checking {i}")
+                                        #print(f"Checking {i}")
                                         wlChannel = int(value[0])
                                         newChannel = int(i)
                                         if newChannel == wlChannel:
                                             
                                             for x in value[1]:
-                                                print(f"Verifying that {StName} is in whitelist...")
+                                                #print(f"Verifying that {StName} is in whitelist...")
                                                 
                                                 if StName == x:
                                                     channelid = i
@@ -144,16 +200,16 @@ async def streamer():
                                                     # await channel.send(content = "@everyone", allowed_mentions = allowed_mentions)
                                                     await channel.send(embed=embed)
                                                     await channel.send(f">>> {channelURL}")
-                                                    print(f"Posted {StName} is Live!")
+                                                    #print(f"Posted {StName} is Live!")
                                                     if StName not in twitchLiveList:
-                                                        print(f"Added {StName} to 'Live Users'")
+                                                        #print(f"Added {StName} to 'Live Users'")
                                                         twitchLiveList.append(StName)
                                                     else:
                                                         continue
                                                 else:
                                                     continue
                                         else:
-                                            print(f"{StName} is NOT whitelisted for {i}")
+                                            #print(f"{StName} is NOT whitelisted for {i}")
                                             continue
                                 else:
                                     continue
@@ -161,7 +217,7 @@ async def streamer():
                             print(f'Current Live users: {twitchLiveList}')
                             continue
                     else:
-                        print("no data found, checking if they went offline...")
+                        #print("no data found, checking if they went offline...")
                         if StName in twitchLiveList:
                             print(f"Removing {StName} from 'Live Users'")
                             with open('whitelist.json', 'r') as file:
@@ -170,7 +226,7 @@ async def streamer():
                                 channels = list(file.readlines())
                             for key in whitelistList:
                                 value = whitelistList[key]
-                                print(value)
+                                #print(value)
                                 if StName in value[1]:
                                     embed=discord.Embed(title=f":black_circle: --- {StName.upper()}'s Stream has ended!' --- :black_circle:", description=f"----------", color=0xff00ff)
                                     embed.set_thumbnail(url="https://upload.wikimedia.org/wikipedia/commons/thumb/d/d3/Twitch_Glitch_Logo_Purple.svg/878px-Twitch_Glitch_Logo_Purple.svg.png")
@@ -188,14 +244,14 @@ async def streamer():
                                                     channel = bot.get_channel(newIDint)
                                                     await channel.send(embed=embed)
                                                     await channel.send(f">>> {channelURL}")
-                                                    print(f"Posted {StName} is offline...")
+                                                    #print(f"Posted {StName} is offline...")
                                                     if StName in twitchLiveList:
-                                                        print(f"Removed {StName} from 'Live Users'")
+                                                        #print(f"Removed {StName} from 'Live Users'")
                                                         twitchLiveList.remove(StName)
                                                     else:
                                                         continue
                         else:
-                            print("No data and streamer hasnt gone live yet")
+                            #print("No data and streamer hasnt gone live yet")
                             continue
                 except KeyError:
                     print("Something went Horribly Wrong...  KEYERROR")
@@ -225,7 +281,7 @@ async def status():
 #=============================
 with open("reactionServers.json") as jsonFile:
     guildReactions = json.load(jsonFile)
-    print(guildReactions)
+    # print(guildReactions)
 
 #=============================
 #  REACTION ROLES PAUSE HERE
@@ -477,7 +533,25 @@ def isSameMessageAs(tup1,tup2):
 #=============================
 #  Image Recognition
 #=============================
-@bot.command(alias = ['ir'])
+def getPrediction(ctx):
+    list_prediction = []
+    new_image = plt.imread('recognitionImages/image_name.jpg')
+    resized_image = resize(new_image, (32,32,3))
+    predictions = model.predict(np.array([resized_image]))
+    list_index = [0,1,2,3,4,5,6,7,8,9]
+    x = predictions
+    for i in range(10):
+        for j in range(10):
+            if x[0][list_index[i]] > x[0][list_index[j]]:
+                temp = list_index[i]
+                list_index[i] = list_index[j]
+                list_index[j] = temp
+    for i in range(5):
+        new_prediction = classification[list_index[i]], ': ', round(predictions[0][list_index[i]]*100, 2), '%'
+        list_prediction.append(new_prediction)
+    return list_prediction
+    
+@bot.command(aliases = ['ir'])
 async def imagerecognition(ctx, url):
     '''Image Recognition! .ir [url]'''
     print("IT WORKED")
@@ -485,6 +559,16 @@ async def imagerecognition(ctx, url):
     img_data = requests.get(image_url).content
     with open('recognitionImages/image_name.jpg', 'wb') as handler:
         handler.write(img_data)
+    list_prediction = getPrediction(ctx)
+    embed=discord.Embed(title=f"--IMAGE PREDICTION--", description=f"----------", color=0xff00ff)
+    embed.set_thumbnail(url = url)
+    embed.add_field(name=f">>  {list_prediction[0][0]}{list_prediction[0][1]} {list_prediction[0][2]}{list_prediction[0][3]}  <<\n" + 
+                        f">>  {list_prediction[1][0]}{list_prediction[1][1]} {list_prediction[1][2]}{list_prediction[1][3]}  <<\n" +
+                        f">>  {list_prediction[2][0]}{list_prediction[2][1]} {list_prediction[2][2]}{list_prediction[2][3]}  <<\n" +
+                        f">>  {list_prediction[3][0]}{list_prediction[3][1]} {list_prediction[3][2]}{list_prediction[3][3]}  <<\n" +
+                        f">>  {list_prediction[4][0]}{list_prediction[4][1]} {list_prediction[4][2]}{list_prediction[4][3]}  <<", value = "-", inline=False)
+    embed.set_footer(text="Coded by: iamu")
+    await ctx.send(embed=embed)
 
 
 
